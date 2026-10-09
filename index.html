@@ -35,21 +35,21 @@
 </head>
 <body class="flex h-screen overflow-hidden antialiased selection:bg-accent selection:text-white">
 
-    <!-- AUTHENTICATION MODAL -->
+    <!-- AUTHENTICATION MODAL (WHOP GATEKEEPER) -->
     <div id="authModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-bgPanel border border-borderMain rounded-xl max-w-md w-full p-6 shadow-2xl space-y-5">
             <div class="flex items-center gap-3 border-b border-borderMain pb-4">
                 <div class="w-3 h-3 rounded-full bg-accent"></div>
                 <div>
-                    <h2 class="text-base font-semibold text-white">RapidAPI Authentication</h2>
-                    <p class="text-xs text-zinc-400">Enter your valid X-RapidAPI-Key to unlock dashboard</p>
+                    <h2 class="text-base font-semibold text-white">Whop Architecture Authentication</h2>
+                    <p class="text-xs text-zinc-400">Enter your valid Whop License Key to unlock dashboard</p>
                 </div>
             </div>
             
             <form onsubmit="saveApiKey(event)" class="space-y-4">
                 <div>
-                    <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block mb-1">X-RapidAPI-Key</label>
-                    <input type="password" id="apiKeyInput" required placeholder="Paste x-rapidapi-key here..." class="w-full bg-bgMain border border-borderMain rounded-lg px-3.5 py-2.5 text-xs font-mono text-zinc-200 focus:outline-none focus:border-accent transition-colors">
+                    <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block mb-1">Whop License Key</label>
+                    <input type="password" id="apiKeyInput" required placeholder="Paste Whop key here..." class="w-full bg-bgMain border border-borderMain rounded-lg px-3.5 py-2.5 text-xs font-mono text-zinc-200 focus:outline-none focus:border-accent transition-colors">
                 </div>
 
                 <button type="submit" id="saveKeyBtn" class="w-full bg-accent hover:bg-accentHover text-white text-xs font-semibold py-3 rounded-lg transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)] flex justify-center items-center gap-2">
@@ -67,7 +67,7 @@
                     <span id="headerStatusDot" class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
                     JNX Analytics
                 </h1>
-                <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold mt-0.5">RapidAPI Engine</p>
+                <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold mt-0.5">Whop Architecture</p>
             </div>
             <button onclick="openAuthModal()" class="text-[10px] bg-borderMain hover:bg-zinc-700 px-2 py-1 rounded-md text-zinc-300 font-mono transition-colors">Key Config</button>
         </div>
@@ -77,7 +77,7 @@
             <div class="bg-bgMain border border-borderMain rounded-lg p-3.5 space-y-3">
                 <div class="flex items-center justify-between border-b border-borderMain/60 pb-2">
                     <div>
-                        <p class="text-[9px] text-zinc-500 uppercase font-semibold">Plan Name</p>
+                        <p class="text-[9px] text-zinc-500 uppercase font-semibold">Whop Plan</p>
                         <p id="activeTierDisplay" class="text-xs font-bold text-accent">VERIFYING...</p>
                     </div>
                     <span id="tierCapBadge" class="text-[10px] font-mono text-zinc-300 bg-borderMain px-2 py-0.5 rounded-md">Live</span>
@@ -192,10 +192,10 @@
         const HASHTAG_COUNTRIES = ["US", "FR", "DE", "IT", "ES", "GB", "AR", "AU", "BR", "CA", "CO", "EG", "ID", "IL", "JP", "KR", "MY", "MX", "PH", "SA", "SG", "ZA", "TW", "TH", "TR", "AE", "VN"];
         const VIDEO_COUNTRIES = ["US", "JP", "VN", "TH", "ID"];
 
-        const API_HOST = 'real-time-tiktok-analytics-viral-trends-api.p.rapidapi.com';
-        const API_URL = 'https://real-time-tiktok-analytics-viral-trends-api.p.rapidapi.com/api/v1/tiktok/trends';
+        // Directe connectie met de Render server in plaats van RapidAPI
+        const API_URL = 'https://jnx-tiktok-api.onrender.com/api/v1/tiktok/trends';
 
-        let userApiKey = localStorage.getItem('ghl_api_key') || '';
+        let userApiKey = localStorage.getItem('whop_license_key') || '';
         let currentPeriod = '7';
         let currentView = 'clean';
         let rawData = null;
@@ -223,7 +223,7 @@
             const btn = document.getElementById('saveKeyBtn');
             const originalText = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = `<span>Validating Key with RapidAPI...</span>`;
+            btn.innerHTML = `<span>Validating Key with Whop...</span>`;
 
             const isValid = await validateAndLoadKey(inputKey, false);
 
@@ -232,11 +232,11 @@
 
             if (isValid) {
                 userApiKey = inputKey;
-                localStorage.setItem('ghl_api_key', userApiKey);
+                localStorage.setItem('whop_license_key', userApiKey);
                 document.getElementById('authModal').classList.add('hidden');
                 updateStatus('Key Verified', 'green');
             } else {
-                alert("Invalid X-RapidAPI-Key! Access denied by RapidAPI (401/403). Please enter a working key.");
+                alert("Invalid Whop License Key! Access denied (401/403). Please enter an active subscription key.");
                 updateStatus('Invalid Key', 'red');
             }
         }
@@ -246,14 +246,14 @@
                 const testUrl = `${API_URL}?trend_type=hashtags&period=7&limit=1&country=US`;
                 const res = await fetch(testUrl, {
                     headers: {
-                        'x-rapidapi-host': API_HOST,
-                        'x-rapidapi-key': key
+                        'Authorization': `Bearer ${key}`,
+                        'Content-Type': 'application/json'
                     }
                 });
 
                 if (res.status === 401 || res.status === 403) {
                     if (!isStartup) {
-                        localStorage.removeItem('ghl_api_key');
+                        localStorage.removeItem('whop_license_key');
                     }
                     return false;
                 }
@@ -334,7 +334,6 @@
             const limit = headers.get('x-ratelimit-requests-limit');
             const remaining = headers.get('x-ratelimit-requests-remaining');
             
-            // TIER LOGICA: BASIC (10) -> PRO (750) -> ULTRA (1500) -> MEGA (5000) -> >5000 is PRIVATE PLAN
             if (limit) {
                 const numLimit = parseInt(limit);
                 let planName = 'BASIC';
@@ -357,6 +356,8 @@
                 }
 
                 document.getElementById('activeTierDisplay').innerText = planName;
+            } else {
+                document.getElementById('activeTierDisplay').innerText = 'WHOP ACTIVE';
             }
 
             if (remaining !== null && limit !== null) {
@@ -368,7 +369,7 @@
                 document.getElementById('quotaText').innerText = `${used} / ${lim}`;
                 document.getElementById('quotaBar').style.width = percentage + '%';
             } else {
-                document.getElementById('quotaText').innerText = 'Synced';
+                document.getElementById('quotaText').innerText = 'Whop Auth Synced';
                 document.getElementById('quotaBar').style.width = '100%';
             }
         }
@@ -405,8 +406,8 @@
             try {
                 const res = await fetch(url, {
                     headers: {
-                        'x-rapidapi-host': API_HOST,
-                        'x-rapidapi-key': userApiKey
+                        'Authorization': `Bearer ${userApiKey}`,
+                        'Content-Type': 'application/json'
                     }
                 });
 
@@ -415,19 +416,19 @@
                 updateQuotaHeaders(res.headers);
 
                 if (res.status === 401 || res.status === 403) {
-                    throw new Error('Invalid or expired RapidAPI Key');
+                    throw new Error('Invalid or expired Whop License Key');
                 }
 
                 if (res.status === 429) {
                     if (targetNextTier === 'PRIVATE_PLAN') {
-                        throw new Error(`Reached ur limit u can apply for a private plan with custom limits to continue`);
+                        throw new Error(`Reached your limit. You can apply for a private plan with custom limits to continue.`);
                     } else {
-                        throw new Error(`Reached ur limit upgrade to ${targetNextTier} to continue`);
+                        throw new Error(`Reached your limit. Upgrade to ${targetNextTier} to continue.`);
                     }
                 }
 
                 if (!res.ok) {
-                    throw new Error(`RapidAPI Error ${res.status}`);
+                    throw new Error(`API Error ${res.status}`);
                 }
 
                 rawData = await res.json();
@@ -448,7 +449,7 @@
             } catch (err) {
                 clearInterval(progressTimer);
                 
-                const isLimitError = err.message.includes('Reached ur limit');
+                const isLimitError = err.message.includes('Reached your limit');
                 alert(isLimitError ? err.message : "Execution Error: " + err.message);
                 
                 document.getElementById('stateLoading').classList.add('hidden');
